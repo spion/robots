@@ -1,0 +1,25 @@
+size 200 200
+start 10 10
+end 190 190
+#down-left
+box 10 20 20 80
+box 40 5 50 80
+box 10 100 80 110
+box 90 0 100 180
+box 120 10 130 200
+#up-left
+
+box 20 140 70 190
+#corridor
+box 100 160 110 180
+box 108 120 120 140
+box 100  80 112 100
+box 108  40 120 60
+#eof corridor
+box 140 40 200 50
+box 130 70 180 80
+box 140 140 170 170
+box 160 110 195 130
+
+enverr 0.05
+gpserr 0.05

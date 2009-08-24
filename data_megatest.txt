@@ -1,0 +1,19 @@
+size  100 100
+step 0.75
+start 50 50
+end   5 25
+#mid
+box 35 35 50 40
+#midup
+box 35 55 60 60
+#down
+box 15 15 65 20
+#up
+box 15 95 80 100
+
+#mid
+box 35 35 40 55
+#midright
+box 60 15 65 60
+#left
+box 15 15 20 95

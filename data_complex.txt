@@ -1,0 +1,11 @@
+size  100 100
+start 10 10
+end   90 95
+box 01 20 35 50
+box 60 01 99 70
+box 35 40 50 99
+box 45 01 60 30
+box 50 80 80 99
+enverr 0.7
+gpserr 3.0
+steperr 0.1

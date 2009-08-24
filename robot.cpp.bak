@@ -1,0 +1,235 @@
+#include "common.hpp"
+#include <cmath>
+
+using namespace std;
+
+#define SENS_STEP 0.5
+#define BOX_INFL 1.9
+#define OBS_FACT 1.75
+
+enum Direction { dUnknown = 0, dUp = 1, dDown = 2, dLeft = 3, dRight = 6 };
+
+int getDirection(SCoord dest)
+{
+	int d = dUnknown;
+	if (dest.x > 0)
+	{
+		d += dUp;	
+	}
+	else if (dest.x < 0) 
+	{
+		d += dDown;
+	}
+	if (dest.y > 0)
+	{
+		d += dRight;
+	}
+	else if (dest.y < 0)
+	{
+		d += dLeft;
+	}
+	return d;
+}
+
+double loglog(double d)
+{
+	if (abs(d) < 0.1) return d;
+	else return ( d / abs(d) * log(abs(d) + 1.0) );
+}
+
+
+SCoord decisionx(const SCoord& po)
+{
+	double x_factor = po.x / po.y;
+	if (abs(x_factor) > OBS_FACT)
+	{
+		return SCoord(po.x, - po.y);
+	}
+	else if (abs(x_factor) < 1/OBS_FACT)
+	{
+		return SCoord(po.x, po.y);
+	}
+	else
+	{
+		return SCoord(po.x, 0.0);
+	}
+}
+
+SCoord decisiony(const SCoord& po)
+{
+	double y_factor = po.y / po.x;
+	if (abs(y_factor) > OBS_FACT)
+	{
+		return SCoord(-po.x, po.y);
+	}
+	else if (abs(y_factor) < 1/OBS_FACT)
+	{
+		return SCoord(po.x , po.y);
+	}
+	else
+	{
+		return SCoord(0.0  , po.y);
+	}
+}
+
+SCoord sgnc(const SCoord& c, const double& mul)
+{
+	return SCoord(c.x/abs(c.x+0.001)*mul, c.y/abs(c.y+0.001)*mul);
+}
+
+int main()
+{
+	vector<SBox> boxes;
+	SCoord start;
+	SCoord where;
+	SCoord end;
+	SCoord size;
+	ifstream f("data.txt");
+	string cmd;
+	double steps = 2.0;
+	while (f >> cmd)
+	{
+		if (cmd == "size") { f >> size.x >> size.y; }
+		if (cmd == "start") { f >> start.x >> start.y; }
+		if (cmd == "end") { f >> end.x >> end.y; }
+		if (cmd == "box")
+		{
+			SBox box;
+			f >> box.sta.x >> box.sta.y >> box.end.x >> box.end.y;
+			box.sta.x -=BOX_INFL;
+			box.sta.y -=BOX_INFL;
+			box.end.x +=BOX_INFL;
+			box.end.y +=BOX_INFL;
+			boxes.push_back(box);
+		}
+		if (cmd == "step")
+		{
+			f >> steps;
+		}
+	}
+	where = start;// + SCoord(SENS_STEP,SENS_STEP);
+	//end = end + SCoord(SENS_STEP,SENS_STEP);
+	SCoord olddelta(1.0, 0.0);
+	SCoord delta;
+
+	vector<SCoord> sensors;
+	sensors.push_back(SCoord(0.0, 1.0)); 
+	sensors.push_back(SCoord(1.0, 0.0)); 
+	sensors.push_back(SCoord(0.0,-1.0)); 
+	
+	sensors.push_back(SCoord(1.0, 1.0));
+	sensors.push_back(SCoord(1.0, -1.0));
+
+	while (! (where == end))
+	{
+		
+		const double min_delta = steps * (0.9 + (0.2 * uniform_deviate(rand())));
+		delta = end - where;
+		double po_x = delta.x;
+		double po_y = delta.y;
+	
+		SCoord decision_x = sgnc(decisionx(delta),min_delta);
+		SCoord decision_y = sgnc(decisiony(delta),min_delta);
+		delta = sgnc(delta, min_delta);
+		SCoord decision_z = delta;
+		
+		SCoord minx(1.0,1.0);
+		SCoord miny(1.0,1.0);
+		for (unsigned i = 0; i < sensors.size(); ++i)
+		{
+			SCoord deltaS = sensors[i];
+			if (   (getDirection(sensors[i]) == getDirection(delta))
+				|| (getDirection(sensors[i]) == getDirection(decision_x))
+				|| (getDirection(sensors[i]) == getDirection(decision_y))
+				)
+			{
+				while (!InBox(where + sensors[i], boxes))
+				{
+
+					debug("BeamLoop");
+					sensors[i] = sensors[i] + deltaS;
+					if (
+						(!((where + sensors[i]) < size)) ||
+						(!((where + sensors[i]) > SCoord(0,0)))
+						) { debug("BreakBeamLoop"); break; }
+					//cout << sensors[i].x << " " << sensors[i].y << endl;
+				}
+				sensors[i].x *= (0.9 + (uniform_deviate(rand()) * 0.2));
+				sensors[i].y *= (0.9 + (uniform_deviate(rand()) * 0.2));
+				/*if (abs(sensors[i].x) > abs(minx.x) && abs(deltaS.x) > SENS_STEP)
+				{*/
+					minx.x += loglog(sensors[i].x);
+				//}
+				/*if (abs(sensors[i].y) > abs(miny.y) && abs(deltaS.y) > SENS_STEP)
+				{*/
+					miny.y += loglog(sensors[i].y);
+				/*}*/
+				cout << "S" << i << " " << sensors[i] << endl;
+			}
+			debug("SensorLoop");
+			sensors[i] = deltaS;
+		}
+		minx.x = exp(minx.x);
+		miny.y = exp(miny.y);
+		//Maximums!
+		cout << "MM (" << minx.x << "," << miny.y << ")" << endl;
+		cout << "PP (" << po_x << "," << po_y << ")" << endl;
+		
+		// Sensor decision process.
+		SCoord dec_sens = SCoord(minx.x, miny.y);
+		SCoord r_decision_x = sgnc(decisionx(dec_sens), min_delta);
+		SCoord r_decision_y = sgnc(decisiony(dec_sens), min_delta);
+		
+		if  (abs(po_y) * abs(miny.y) > abs(po_x) * abs(minx.x))
+		{
+			delta = r_decision_y;
+			if (abs(miny.y) < abs(delta.y))
+				delta = r_decision_x;//0.0;
+			/*
+			if (abs(miny.y) > abs(delta.y))
+			{
+				cout << "GoY "<< (InBox(where + SCoord(where.x, where.y + delta.y),boxes)) << endl;
+				delta.x = 0.0;
+			}
+			else { 
+				delta.y = 0.0; 
+			}*/
+		}
+		else
+		{
+			delta = r_decision_x;
+			if (abs(minx.x) < abs(delta.x))
+				delta = r_decision_y; //0.0;
+			/*
+			if (abs(minx.x) > abs(delta.x))
+			{
+				cout << "GoX "<<endl;
+				delta.y = 0.0;
+			}
+			else
+			{
+				delta.x = 0.0;
+			}
+			*/
+		}
+		
+		cout << "DT " << delta << endl;	
+		//cout << "Minx, miny: " << minx.x << " " << miny.y << endl;
+		where = where + delta;
+		debug("MoveLoop");
+
+		cout << "AT " << where << endl;
+
+		if (!(olddelta == delta))
+		{
+			sensors[1] = decision_x;
+			sensors[0] = decision_y;
+			sensors[2] = decision_z;
+			
+			sensors[3] = sensors[0] + sensors[1];
+			sensors[4] = sensors[2] + sensors[1];
+		}
+		olddelta = delta;
+	}
+
+}

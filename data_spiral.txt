@@ -1,0 +1,11 @@
+size  100 100
+step 0.75
+start 50 50
+end   10 65
+box 40 40 60 45
+box 60 45 65 55
+box 20 55 65 60
+box 20 20 30 55
+box 10 20 30 40
+#box
+enverr 0.8

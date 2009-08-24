@@ -1,0 +1,6 @@
+size  100 100
+step 0.75
+start 55 10
+end   50 90
+box 35 35 65 65
+stdev 0.2
