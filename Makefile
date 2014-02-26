@@ -4,17 +4,17 @@ robot: robot.cpp common.hpp
 	${CXX} ${CXXFLAGS} -Wall robot.cpp -o robot
 
 drawani: drawani.cpp common.hpp
-	${CXX} ${CXXFLAGS} -Wall -lglut -lGL drawani.cpp -o drawani
+	${CXX} ${CXXFLAGS} -Wall -lglut -lGLU -lGL drawani.cpp -o drawani
 
 drawlines: drawlines.cpp common.hpp
-	${CXX} ${CXXFLAGS} -Wall -lglut -lGL drawlines.cpp -o drawlines
+	${CXX} ${CXXFLAGS} -Wall -lglut -lGLU -lGL drawlines.cpp -o drawlines
 
 
 sonar: sonar.cpp common.hpp
 	${CXX} ${CXXFLAGS} -Wall sonar.cpp -o sonar
 
 drawani3d: drawani3d.cpp common.hpp
-	${CXX} ${CXXFLAGS} -Wall -lglut -lGL drawani3d.cpp -o drawani3d
+	${CXX} ${CXXFLAGS} -Wall -lglut -lGLU -lGL drawani3d.cpp -o drawani3d
 
 boxer: boxer.cpp common.hpp
 	${CXX} ${CXXFLAGS} -Wall boxer.cpp -o boxer
