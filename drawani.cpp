@@ -7,6 +7,7 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <unistd.h>
 #include "common.hpp"
 
 #define pi M_PI
